@@ -1,0 +1,39 @@
+{
+  "mongodb": {
+    "host": "mongodb+srv://boxshall:D0cum3ntum!@boxshallcluster.qdtfe.mongodb.net/development?retryWrites=true&w=majority",
+    "credentials": {
+      "auth": {
+        "user": "boxshall",
+        "password": "D0cum3ntum!"
+      }
+    }
+  },
+  "allowedOrigins": [
+    "http://localhost:3000",
+    "http://localhost:9000",
+    "http://verd.com.au",
+    "https://verd.com.au",
+    "http://api.verd.com.au",
+    "https://api.verd.com.au",
+    "https://developer.intuit.com"
+  ],
+  "secret": "B0xsh@!!",
+  "verification": {
+    "email": "dev@boxshallelec.com",
+    "password": "Qwerty321"
+  },
+  "aws": {
+    "accessKey": "AKIAJBZQPSF27ZAJRN6A",
+    "secretKey": "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",
+    "region": "us-east-1",
+    "bucket": "verd-dev"
+  },
+  "intuit-config": {
+    "redirectUri": "https://api.verd.com.au/intuit/callback",
+    "clientId": "AB5r58PsfGWfDCqwWIp9CZiZ5DaVbSVXYm4OjFmNzP8wM8blYz",
+    "clientSecret": "AfmVTsPojotTm52slQZWSlnrnKZvPxvM1D1AbpY3",
+    "environment": "sandbox",
+    "webhooksverifier": "80ef47ae-7015-4037-9e84-25ad99be84a0",
+    "import": true
+  }
+}
