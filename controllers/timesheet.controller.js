@@ -259,6 +259,31 @@ exports.draft = function (req, res) {
     }
   );
 };
+exports.status = function (req, res) {
+  const Id = req.body.id;
+  
+  var tesId;
+  var status;
+  var timesheetData;
+  // TimeSheetExtended.findByIdAndDelete({ _id: ObjectId($req.params.id) })
+  // TimeSheetExtended.deleteOne({Hours: 12.345 })
+  var myquery = { _id: req.body.id };
+  var newvalues = { $set: {status: "WithApprover" }};
+  TimeSheetExtended.updateOne(myquery, newvalues, function(err, obj) {
+    if (err) {
+      return res
+        .status(500)
+        .json({ success: false, message: error.message });
+    } else {
+      console.log("1 document updated");
+      return res.status(200).json({
+        success: true,
+        message: "Timesheet Updated",
+      });
+    }
+    
+  });
+};
 
 exports.sendTimesheetsToQB = function (req, res) {
   var timeExtendedSheets = req.body.timeSheetExtended;
