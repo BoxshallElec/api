@@ -13,6 +13,8 @@ exports.add = function (req, res) {
   const StartTime = req.body.StartTime;
   const Hours = req.body.Hours;
   const clientId = req.body.clientId;
+  // console.log("ClientId");
+  // console.log(clientId);
   const taskId = req.body.taskId;
   const classId = req.body.classId;
   const isBillable = req.body.isBillable;
@@ -45,6 +47,8 @@ exports.add = function (req, res) {
         } else cb();
       },
       function (cb) {
+        console.log("employeeRef");
+        console.log(employeeId["approverId"]);
         var data = {
           NameOf: "Employee",
           Hours: Hours,
@@ -61,6 +65,131 @@ exports.add = function (req, res) {
           images: images,
           notes: notes,
           StartTime: StartTime ? StartTime : undefined,
+          clientId: clientId,
+        };
+        const timeSheetExtended = new TimeSheetExtended(data);
+        timeSheetExtended.save({}, function (err, data) {
+          if (err) cb(err);
+          else {
+            tesId = data["_id"];
+            status = data["status"];
+            cb();
+          }
+        });
+      },
+      function (cb) {
+        TimeSheetExtended.aggregate(
+          [
+            {
+              $match: {
+                _id: tesId,
+              },
+            },
+            {
+              $lookup: {
+                from: "tasks",
+                localField: "ItemRef.value",
+                foreignField: "_id",
+                as: "task",
+              },
+            },
+            {
+              $lookup: {
+                from: "clients",
+                localField: "CustomerRef.value",
+                foreignField: "_id",
+                as: "client",
+              },
+            },
+            {
+              $lookup: {
+                from: "classes",
+                localField: "ClassRef.value",
+                foreignField: "_id",
+                as: "class",
+              },
+            },
+            { $limit: size },
+            { $skip: from },
+          ],
+          function (err, data) {
+            if (err) cb(err.message);
+            else {
+              timesheetData = data[0];
+              cb();
+            }
+          }
+        );
+      },
+    ],
+    function (err, data) {
+      if (err) {
+        return res.status(500).json({ success: false, message: err });
+      } else {
+        return res.status(200).json({
+          success: true,
+          message: "Timesheets Saved Successfully",
+          data: timesheetData,
+        });
+      }
+    }
+  );
+};
+exports.draft = function (req, res) {
+  const employeeId = req.body.userId;
+  const StartTime = req.body.StartTime;
+  const Hours = req.body.Hours;
+  const clientId = req.body.clientId;
+  // console.log("ClientId");
+  // console.log(clientId);
+  const taskId = req.body.taskId;
+  const classId = req.body.classId;
+  const isBillable = req.body.isBillable;
+  const Description = req.body.Description || "";
+  const notes = req.body.notes;
+  const images = req.body.images;
+  const from = req.body.from || 0;
+  const size = req.body.size || 10;
+  var tesId;
+  var employeeRef;
+  var timesheetData;
+  async.series(
+    [
+      function (cb) {
+        if (employeeId) {
+          EmployeeExtended.findOne(
+            {
+              employeeRef: employeeId,
+            },
+            function (err, data) {
+              if (err) cb(err);
+              else {
+                if (data) {
+                  employeeRef = data;
+                }
+                cb();
+              }
+            }
+          );
+        } else cb();
+      },
+      function (cb) {
+        console.log("employeeRef");
+        console.log(employeeId["approverId"]);
+        var data = {
+          NameOf: "Employee",
+          Hours: Hours,
+          EmployeeRef: { value: employeeId },
+          CustomerRef: { value: clientId },
+          ClassRef: { value: classId },
+          ItemRef: { value: taskId },
+          Description: Description,
+          BillableStatus: isBillable ? "Billable" : "NotBillable",
+          status: "WithEmployee",
+          images: images,
+          notes: notes,
+          StartTime: StartTime ? StartTime : undefined,
+          clientId: clientId,
         };
         const timeSheetExtended = new TimeSheetExtended(data);
         timeSheetExtended.save({}, function (err, data) {

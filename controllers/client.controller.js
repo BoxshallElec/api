@@ -148,6 +148,8 @@ exports.list = function(req, res) {
     .limit(size)
     .then(data => {
       if (from == 0) {
+          // console.log("LOLLZZZ");
+          // console.log(Client.countDocuments({}));
         Client.countDocuments({})
           .then(totalCount => {
             return res.status(200).json({
