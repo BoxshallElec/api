@@ -13,8 +13,6 @@ exports.add = function (req, res) {
   const StartTime = req.body.StartTime;
   const Hours = req.body.Hours;
   const clientId = req.body.clientId;
-  // console.log("ClientId");
-  // console.log(clientId);
   const taskId = req.body.taskId;
   const classId = req.body.classId;
   const isBillable = req.body.isBillable;
@@ -47,8 +45,6 @@ exports.add = function (req, res) {
         } else cb();
       },
       function (cb) {
-        console.log("employeeRef");
-        console.log(employeeId["approverId"]);
         var data = {
           NameOf: "Employee",
           Hours: Hours,
@@ -140,8 +136,6 @@ exports.draft = function (req, res) {
   const StartTime = req.body.StartTime;
   const Hours = req.body.Hours;
   const clientId = req.body.clientId;
-  // console.log("ClientId");
-  // console.log(clientId);
   const taskId = req.body.taskId;
   const classId = req.body.classId;
   const isBillable = req.body.isBillable;
@@ -174,8 +168,6 @@ exports.draft = function (req, res) {
         } else cb();
       },
       function (cb) {
-        console.log("employeeRef");
-        console.log(employeeId["approverId"]);
         var data = {
           NameOf: "Employee",
           Hours: Hours,
@@ -275,7 +267,6 @@ exports.status = function (req, res) {
         .status(500)
         .json({ success: false, message: error.message });
     } else {
-      console.log("1 document updated");
       return res.status(200).json({
         success: true,
         message: "Timesheet Updated",
@@ -419,7 +410,65 @@ exports.listByDate = function (req, res) {
       return res.status(500).json({ success: false, message: error.message });
     });
 };
-
+exports.listByCompany = function (req, res) {
+//   const from = req.body.from || 0;
+  const size = req.body.size || 10;
+  const customerref = req.body.customerref;
+  const status = req.body.statusVal;
+  // TimeSheetExtended.aggregate([
+  //   {
+  //     $match: {
+  //       "CustomerRef.value": customerref,
+  //     },
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: "tasks",
+  //       localField: "ItemRef.value",
+  //       foreignField: "_id",
+  //       as: "task",
+  //     },
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: "clients",
+  //       localField: "EmployeeRef.value",
+  //       foreignField: "_id",
+  //       as: "client",
+  //     },
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: "classes",
+  //       localField: "ClassRef.value",
+  //       foreignField: "_id",
+  //       as: "class",
+  //     },
+  //   },
+  //   { $limit: size },
+  // ])
+    TimeSheetExtended.find({ "CustomerRef.value": customerref, "status":status})
+    .limit(size)
+    .then((timesheets) => {
+      TimeSheetExtended.countDocuments({ "CustomerRef.value": customerref , "status":status})
+        .then((count) => {
+          return res.status(200).json({
+            success: true,
+            message: "Timesheets list fetched successfully",
+            data: timesheets,
+            totalCount: count,
+          });
+        })
+        .catch((error) => {
+          return res
+            .status(400)
+            .json({ success: false, message: error.message });
+        });
+    })
+    .catch((error) => {
+      return res.status(500).json({ success: false, message: error.message });
+    });
+};
 exports.listWithCount = function (req, res) {
   const from = req.body.from || 0;
   const size = req.body.size || 10;
