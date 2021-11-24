@@ -9,6 +9,7 @@ router.post("/listWithCount", verify_token, timesheet_controller.listWithCount);
 router.post("/add", verify_token, timesheet_controller.add);
 router.post("/draft", verify_token, timesheet_controller.draft);
 router.post("/updatestatus",verify_token,timesheet_controller.status);
+router.post("/listByCompany",verify_token,timesheet_controller.listByCompany);
 router.post(
   "/sendTimesheetsToQB",
   verify_token,
