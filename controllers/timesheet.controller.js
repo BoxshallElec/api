@@ -54,10 +54,11 @@ exports.add = function (req, res) {
           ItemRef: { value: taskId },
           Description: Description,
           BillableStatus: isBillable ? "Billable" : "NotBillable",
-          status:
-            employeeRef && employeeRef["approverId"]
-              ? "WithApprover"
-              : "WithEmployee",
+          status:"WithApprover",
+          // status:
+          //   employeeRef && employeeRef["approverId"]
+          //     ? "WithApprover"
+          //     : "WithEmployee",
           images: images,
           notes: notes,
           StartTime: StartTime ? StartTime : undefined,
