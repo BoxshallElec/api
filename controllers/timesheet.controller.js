@@ -24,6 +24,8 @@ exports.add = function (req, res) {
   var tesId;
   var employeeRef;
   var timesheetData;
+  console.log("Stdate");
+  console.log(StartTime);
   async.series(
     [
       function (cb) {
@@ -64,7 +66,9 @@ exports.add = function (req, res) {
           StartTime: StartTime ? StartTime : undefined,
           clientId: clientId,
         };
+        
         const timeSheetExtended = new TimeSheetExtended(data);
+        console.log(timeSheetExtended);
         timeSheetExtended.save({}, function (err, data) {
           if (err) cb(err);
           else {
@@ -251,6 +255,55 @@ exports.draft = function (req, res) {
       }
     }
   );
+};
+exports.edit = function (req, res) {
+  const employeeId = req.body.userId;
+  const StartTime = req.body.StartTime;
+  const Hours = req.body.Hours;
+  const clientId = req.body.clientId;
+  const taskId = req.body.taskId;
+  const classId = req.body.classId;
+  const isBillable = req.body.isBillable;
+  const Description = req.body.Description || "";
+  const notes = req.body.notes;
+  const images = req.body.images;
+  const from = req.body.from || 0;
+  const size = req.body.size || 10;
+  const Id = req.body.objid;
+  
+  var tesId;
+  var status;
+  var timesheetData;
+  // TimeSheetExtended.findByIdAndDelete({ _id: ObjectId($req.params.id) })
+  // TimeSheetExtended.deleteOne({Hours: 12.345 })
+  console.log("id");
+  console.log(Id);
+  var myquery = { _id: Id};
+  var newvalues = { $set: {
+    images:images,
+    Hours:Hours,
+    EmployeeRef: {value:employeeId},
+    CustomerRef: {value:clientId},
+    ItemRef:{value:taskId},
+    Description: Description,
+    BillableStatus:isBillable ? "Billable" : "NotBillable",
+    status:"WithEmployee",
+    notes:notes,
+    StartTime:StartTime ? StartTime : undefined,
+   }};
+  TimeSheetExtended.updateOne(myquery, newvalues, function(err, obj) {
+    if (err) {
+      return res
+        .status(500)
+        .json({ success: false, message: error.message });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "Timesheet Updated",
+      });
+    }
+    
+  });
 };
 exports.status = function (req, res) {
   const Id = req.body.id;
@@ -472,7 +525,7 @@ exports.listByCompany = function (req, res) {
 };
 exports.listWithCount = function (req, res) {
   const from = req.body.from || 0;
-  const size = req.body.size || 10;
+  const size = req.body.size || 100;
   const userId = req.body.userId;
   TimeSheetExtended.aggregate([
     {

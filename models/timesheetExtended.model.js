@@ -22,9 +22,9 @@ const TimesheetExtendedSchema = new Schema({
   BillableStatus: { type: String, enum: BillableStatus },
   images: [String],
   notes: String,
-  StartTime: { dateTime: Date },
+  StartTime: String,
 });
-
+console.log(TimesheetExtendedSchema);
 module.exports = mongoose.model(
   "timesheetExtended",
   TimesheetExtendedSchema,
