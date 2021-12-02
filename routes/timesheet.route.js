@@ -11,6 +11,8 @@ router.post("/draft", verify_token, timesheet_controller.draft);
 router.post("/edit", verify_token, timesheet_controller.edit);
 router.post("/updatestatus",verify_token,timesheet_controller.status);
 router.post("/listByCompany",verify_token,timesheet_controller.listByCompany);
+router.post("/listByEmployee",verify_token,timesheet_controller.listByEmployee);
+router.post("/listByStatus",verify_token,timesheet_controller.listByStatus);
 router.post(
   "/sendTimesheetsToQB",
   verify_token,
