@@ -28,7 +28,7 @@ exports.register = function (req, res) {
         });
       }
       else{
-        console.log("EmailNo");
+        console.log("Email works");
       }
 
       var password = generator.generate({
@@ -38,27 +38,34 @@ exports.register = function (req, res) {
       });
 
       var displayName = req.body.FirstName + " " + req.body.FamilyName;
-
+      console.log(displayName);
       if (employee && employee.DisplayName === displayName) {
         return res.status(500).json({
           success: false,
           message: "First and Last name already exist",
         });
       }
+      else{
+        console.log("display name works");
+      }
 
       if (req.body.Title) {
         displayName = req.body.Title + ". " + displayName;
       }
 
-      if (employee && employee.DisplayName === displayName) {
-        return res.status(200).json({
-          success: false,
-          message: "First and Last name already exist",
-        });
-      }
+      // if (employee && employee.DisplayName === displayName) {
+      //   return res.status(200).json({
+      //     success: false,
+      //     message: "First and Last name already exist",
+      //   });
+      // }
 
       const qbo = Intuit.getQBOConnection();
-
+      // console.log("Callback check");
+      // const qbo = Intuit.authUri();
+      console.log("qbo");
+      // console.log(Intuit.webhooks);
+      console.log(qbo);
       if (qbo) {
         const givenName = req.body.FirstName + " " + req.body.FamilyName;
 
@@ -109,6 +116,7 @@ exports.register = function (req, res) {
         qbo.createEmployee(qboEmployee, function (error, result) {
           console.log("Trying to create");
           if (error) {
+            console.log(error);
             return res.status(500).json({
               success: false,
               message: error.Fault.Error[0].Message,
@@ -189,7 +197,7 @@ exports.login = function (req, res) {
 
 exports.list = function (req, res) {
   const from = req.body.from || 0;
-  const size = req.body.size || 10;
+  const size = req.body.size || 100;
   var employeeData;
   var result = [];
   async.series(
@@ -227,6 +235,8 @@ exports.list = function (req, res) {
                       PrimaryPhone: emp.PrimaryPhone,
                       PrimaryAddr: emp.PrimaryAddr,
                       email: emp.email,
+                      type:emp.type,
+                      active:emp.Active,
                       HiredDate: emp.HiredDate,
                       ReleasedDate: emp.ReleasedDate,
                       _id: emp._id,
