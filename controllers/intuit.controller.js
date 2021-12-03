@@ -19,7 +19,7 @@ var util = require("../utils/util");
 var queue = require("../queue/queue");
 let oauth2_token_json = null;
 let oauthClient = null;
-
+const realmId = "4620816365164578440";
 exports.index = function (req, res) {
   res.render(path.join(__dirname, "../public/index"));
 };
@@ -40,6 +40,7 @@ exports.authUri = function (req, res) {
 };
 
 exports.callback = function (req, res) {
+  console.log("CALLBACK");
   oauthClient
     .createToken(req.url)
     .then(function (authResponse) {
@@ -605,24 +606,29 @@ exports.getOAuthClient = function () {
 };
 
 exports.getQBOConnection = function () {
-  if (oauth2_token_json) {
-    const intuitTokens = JSON.parse(oauth2_token_json);
-
+  // if (oauth2_token_json) {
+    // const intuitTokens = JSON.parse(oauth2_token_json);
+    console.log("QBOCONN");
+    // const realmId = 4620816365164578440;
+    console.log(realmId);
+    let access_token = "eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..v13-bhvogjSNWRQxBJlcXQ.mTNHR2AdKhL4MjvYEKBClfzim3TvhDxnsGW2pExNrxWER_fxnKfQJk3BIjhbNFKVFhvo2lCkyQGchOOj5wGp6oqKi2I-95T_QIxsayORGmkyaxBSF_9AzOgUzvqXIph3-T6geVU6CVW64AZ78Kqaqs2jXkdUpvrz4azZrPDplSniZ6NkoFVT7wDd8hUsfibfZfai9zKtmLmX3kQldm9GeKDy4HcNaLCIyZxtLmasQnow3-jZ6UR80DMcezWo6_jIWQRW94Q_nNkXOGZFAjZUDZRoAabac3SZNZPZFJXBE08MO51fAzdzZ-YVyaflN6ZqCPKyJhbmbUHgxvH9ndtkWkDC8E_UtQEBft1I3ubzArf35VE5uxyn4z0L9YlF1cJhasGzZwJN4CDjeAa05gffmB46W1tcNH4vCivcH-Ff3vC4of-CuWRteOSGYJ2CcOsZFdH9HYsUHOTnZ_ruQF4gMYPYVsLtlwexTs00AM1-1vceWyWSQaGm4T-gQRTucrrzSV5CqdMgAooMVN3YA3FWj1KJnHxzTUkf90WgAVbjIFmDDGgsSAvhs3TwNaJuPv2qG253m2dXP2n7MZegekRJtpElRQIjRP68z6TdnZ1pQx1caabWJAB8HvkDXqtImkHxsv7vUzYSSj4Ie_hgeW1m2l8WidcK7KmOYpYwSm9keuzc6e7YkuiAZDlgEIYG-8YZFPYPcnMWBFSBGfTtMv5gVIn4sbuNh1tocvDsncVgP5bzCHUsax3HeqCs39eBh4XQgocWqsmIiWTRNlO5125kjTNaGawwmXqA3ZBd__V-7r6KYvr4CJaeyGBoS8EJkALwiG9t63vUthNCFYS29HvDyKC_-I6UOyQsWrgROjGqLIyX8wcb9SaWBhFPsoMhLBYktOx0oRyEvBbi3t7nuP2iug.Z7m9uDAvZHtsOFIpKu_FDA";
+    let refresh_token = "AB11647125661aXHZtOdaP2lHHwbs7jSZtys5KByJNOxx1Iyd2";
     var qbo = new QuickBooks(
       intuit_config.clientId,
       intuit_config.clientSecret,
-      intuitTokens.access_token,
+      access_token,
       false, // no token secret for oAuth 2.0
-      intuitTokens.realmId,
+      realmId,
       intuit_config.environment == "sandbox" ? true : false, // use the sandbox?
       true, // enable debugging?
-      null, // set minorversion, or null for the latest version
+      63, // set minorversion, or null for the latest version
       "2.0", //oAuth version
-      intuitTokens.refresh_token
+      refresh_token
     );
-
+    console.log(realmId);
+    console.log(qbo);
     return qbo;
-  } else {
-    return null;
-  }
+  // } else {
+  //   return null;
+  // }
 };
