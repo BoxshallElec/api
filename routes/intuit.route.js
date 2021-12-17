@@ -10,5 +10,6 @@ router.get("/refreshAccessToken", intuit_controller.refreshAccessToken);
 router.get("/getCompanyInfo", intuit_controller.getCompanyInfo);
 router.post("/webhooks", intuit_controller.webhooks);
 router.get("/disconnect", intuit_controller.disconnect);
+router.get("/getQBOConnection", intuit_controller.getQBOConnection);
 
 module.exports = router;

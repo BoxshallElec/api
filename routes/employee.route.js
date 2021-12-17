@@ -14,5 +14,6 @@ router.post(
   employee_controller.changePassword
 );
 router.post("/setApprover", employee_controller.setApprover);
-
+router.post("/getApprover", employee_controller.getApprover);
+router.post("/getAllEmployeesQBO",employee_controller.getAllEmployeesQBO);
 module.exports = router;

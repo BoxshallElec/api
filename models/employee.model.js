@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const SALT_WORK_FACTOR = 10;
 const bcrypt = require("bcrypt");
-const TYPE = ["Admin", "Employee"];
+const TYPE = ["Admin", "Employee", "User"];
 const Gender = ["Male", "Female"];
 
 var EmployeeSchema = new Schema(
@@ -51,7 +51,7 @@ var EmployeeSchema = new Schema(
     email: { type: String, unique: true },
     password: String,
     isFirstTime: { type: Boolean, default: true },
-    type: { type: String, enum: TYPE, default: "Employee" },
+    type: { type: String, enum: TYPE, default: "User" },
   },
   { _id: false }
 );

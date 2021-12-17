@@ -13,6 +13,20 @@ const QuickBooks = require("node-quickbooks");
 const intuit_config = config.get("intuit-config");
 const EmployeeExtended = require("../models/employeeExtended.model");
 const async = require("async");
+const transporter = nodemailer.createTransport({
+  host: "smtp-mail.outlook.com", // hostname
+  secureConnection: false, // TLS requires secureConnection to be false
+  port: 587, // port for secure SMTP
+  tls: {
+     ciphers:'SSLv3'
+  },
+  auth: {
+      user: 'shwetha@boxshallelec.com',
+      pass: 'Boxshall@123'
+  }
+});
+
+// setup e-mail data, even with unicode symbols
 
 exports.register = function (req, res) {
   console.log("Try registering");
@@ -59,7 +73,9 @@ exports.register = function (req, res) {
       //     message: "First and Last name already exist",
       //   });
       // }
-
+      console.log("RE");
+      console.log(req.url);
+      console.log("Before QBO");
       const qbo = Intuit.getQBOConnection();
       // console.log("Callback check");
       // const qbo = Intuit.authUri();
@@ -119,7 +135,7 @@ exports.register = function (req, res) {
             console.log(error);
             return res.status(500).json({
               success: false,
-              message: error.Fault.Error[0].Message,
+              message: error,
             });
           }
 
@@ -127,16 +143,47 @@ exports.register = function (req, res) {
           newEmployee.email = newEmployee.PrimaryEmailAddr.Address;
           newEmployee.password = password;
           newEmployee._id = result.Id;
-
+          var mailOptions = {
+            from: "shwetha@boxshallelec.com",
+              to: newEmployee.email,
+              subject: "Boxshall Electrical account details",
+              html:
+                "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'> <html xmlns='http://www.w3.org/1999/xhtml'> <head> <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /> <title>Boxshall Electrical Account Details</title> <meta name='viewport' content='width=device-width, initial-scale=1.0' /> <style> button { display: inline-block; border: none; padding: 1rem 2rem; margin: 0; text-decoration: none; background: #e67e22; color: #ffffff; font-family: sans-serif; font-size: 1rem; cursor: pointer; border-radius: 6px; text-align: center; transition: background 250ms ease-in-out, transform 150ms ease; -webkit-appearance: none; -moz-appearance: none; } button:hover, button:focus { background: #d35400; } button:focus { outline: 1px solid #fff; outline-offset: -4px; } button:active { transform: scale(0.99); } </style> </head> <body style='background: #ecf0f1'> <table align='center' border='0' cellpadding='20' cellspacing='20' width='600' style='border-collapse: collapse;background: #fff;border-radius: 6px'> <tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; padding-top: 24px;padding-bottom: 24px'> <b>Boxshall Electrical</b> </td> </tr> <tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 30px; line-height: 20px;padding-bottom: 24px'> <b>Your login details</b> </td> </tr>" +
+                "<tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> Email : <b>" +
+                newEmployee.email +
+                "</b></td></tr>" +
+                "<tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> Password : <b>" +
+                newEmployee.password +
+                "</b></td></tr>" +
+                "<tr><td style='color: #9e9e9e; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> Hi {{username}}, Use above email and password to start using Boxshall Electrical. </td> </tr> <tr> <td align='center' style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> <button><a href='{{link}}' style='color:white;text-decoration: none'>Login</a></button> </td> </tr> <td bgcolor='#e67e22' style='padding: 30px 30px 30px 30px;border-bottom-left-radius: 6px;border-bottom-right-radius: 6px'> <table border='0' cellpadding='0' cellspacing='0' width='100%'> <tr> <td width='75%' style='color: #ffffff; font-family: Arial, sans-serif; font-size: 14px;'> Copyright © 2019, Boxshall Electrical. All Rights Reserved </td> <td align='right'> <table border='0' cellpadding='0' cellspacing='0'> <tr> <td> <a href='http://www.twitter.com/'> <img src='https://www.iconsdb.com/icons/preview/white/twitter-xxl.png' alt='Twitter' width='38' height='38' style='display: block;' border='0' /> </a> </td> <td style='font-size: 0; line-height: 0;' width='20'>&nbsp;</td> <td> <a href='http://www.facebook.com/'> <img src='https://www.iconsdb.com/icons/preview/white/facebook-3-xxl.png' alt='Facebook' width='38' height='38' style='display: block;' border='0' /> </a> </td> </tr> </table> </td> </tr> </table> </td> </table> </body> </html>"
+                  .replace("{{username}}", newEmployee.DisplayName)
+                  .replace("{{link}}", "google.com"),
+          };
           newEmployee
             .save()
             .then((output) => {
-              return sendVerificationMail(output, password, req, res);
+              console.log("SV");
+              return transporter.sendMail(mailOptions, function(error, info){
+                if(error){
+                    return console.log(error);
+                }
+            
+                console.log('Message sent: ' + info.response);
+            });
             })
             .catch((error) => {
               reject(error);
             });
         });
+        // let id = "700";
+        // qbo.getEmployee(id, function(error, result){
+        //   console.log(result);
+        //   return res.json({
+        //     success: true,
+        //     message: "verified ID successfully.",
+        //     data: result,
+        //   });
+        // });
       } else {
         return res.status(200).json({
           success: false,
@@ -421,10 +468,11 @@ exports.changePassword = function (req, res) {
 };
 
 sendVerificationMail = function (employee, password, req, res) {
+  console.log("HELLOSV");
   var username = employee.DisplayName;
 
   var link = "http://" + req.headers.host;
-
+  console.log(link);
   var transporter = nodemailer.createTransport({
     host: "webcloud64.au.syrahost.com",
     port: 465,
@@ -434,7 +482,7 @@ sendVerificationMail = function (employee, password, req, res) {
       pass: verification.password,
     },
   });
-
+  console.log("Send Verrifcation");
   var mailOptions = {
     from: "noreply@boxshallelec.com",
     to: employee.email,
@@ -534,3 +582,106 @@ exports.setApprover = function (req, res) {
     }
   );
 };
+
+exports.getApprover = function (req, res) {
+
+  const employeeId = req.body.selectedUser;
+  const size = req.body.size || 100;
+  EmployeeExtended.find({ "employeeRef": employeeId})
+    .limit(size)
+    .then((employee) => {
+      console.log("EmployeeUser");
+      console.log(employee);
+      EmployeeExtended.countDocuments({ "employeeRef": employeeId})
+        .then((count) => {
+          console.log("Inside extend");
+          return res.status(200).json({
+
+            success: true,
+            message: "Employee Approver list fetched successfully",
+            data: employee,
+            totalCount: count,
+          });
+        })
+        .catch((error) => {
+          return "res"
+            .status(400)
+            .json({ success: false, message: error.message });
+        });
+    })
+    .catch((error) => {
+      return res.status(500).json({ success: false, message: error.message });
+    });
+
+};
+exports.getAllEmployeesQBO = function(req, res){
+  const qbo = Intuit.getQBOConnection();
+  qbo.findEmployees( function (error, result) {
+    console.log("Trying to retrieve");
+    if (error) {
+      console.log(error);
+      return res.status(500).json({
+        success: false,
+        message: error,
+      });
+    }
+    else{
+      console.log(result);
+      return res.status(200).json({
+
+        success: true,
+        message: "Employee list fetched successfully",
+        data: result,
+      });
+    }
+  });
+};
+
+// exports.linkEmployee = function(req, res){
+//   const qbo = Intuit.getQBOConnection();
+//   qbo.createEmployee(qboEmployee, function (error, result) {
+//     console.log("Trying to create");
+//     if (error) {
+//       console.log(error);
+//       return res.status(500).json({
+//         success: false,
+//         message: error,
+//       });
+//     }
+
+//     const newEmployee = new Employee(result);
+//     newEmployee.email = newEmployee.PrimaryEmailAddr.Address;
+//     newEmployee.password = password;
+//     newEmployee._id = result.Id;
+//     var mailOptions = {
+//       from: "shwetha@boxshallelec.com",
+//         to: newEmployee.email,
+//         subject: "Boxshall Electrical account details",
+//         html:
+//           "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'> <html xmlns='http://www.w3.org/1999/xhtml'> <head> <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /> <title>Boxshall Electrical Account Details</title> <meta name='viewport' content='width=device-width, initial-scale=1.0' /> <style> button { display: inline-block; border: none; padding: 1rem 2rem; margin: 0; text-decoration: none; background: #e67e22; color: #ffffff; font-family: sans-serif; font-size: 1rem; cursor: pointer; border-radius: 6px; text-align: center; transition: background 250ms ease-in-out, transform 150ms ease; -webkit-appearance: none; -moz-appearance: none; } button:hover, button:focus { background: #d35400; } button:focus { outline: 1px solid #fff; outline-offset: -4px; } button:active { transform: scale(0.99); } </style> </head> <body style='background: #ecf0f1'> <table align='center' border='0' cellpadding='20' cellspacing='20' width='600' style='border-collapse: collapse;background: #fff;border-radius: 6px'> <tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; padding-top: 24px;padding-bottom: 24px'> <b>Boxshall Electrical</b> </td> </tr> <tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 30px; line-height: 20px;padding-bottom: 24px'> <b>Your login details</b> </td> </tr>" +
+//           "<tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> Email : <b>" +
+//           newEmployee.email +
+//           "</b></td></tr>" +
+//           "<tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> Password : <b>" +
+//           newEmployee.password +
+//           "</b></td></tr>" +
+//           "<tr><td style='color: #9e9e9e; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> Hi {{username}}, Use above email and password to start using Boxshall Electrical. </td> </tr> <tr> <td align='center' style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> <button><a href='{{link}}' style='color:white;text-decoration: none'>Login</a></button> </td> </tr> <td bgcolor='#e67e22' style='padding: 30px 30px 30px 30px;border-bottom-left-radius: 6px;border-bottom-right-radius: 6px'> <table border='0' cellpadding='0' cellspacing='0' width='100%'> <tr> <td width='75%' style='color: #ffffff; font-family: Arial, sans-serif; font-size: 14px;'> Copyright © 2019, Boxshall Electrical. All Rights Reserved </td> <td align='right'> <table border='0' cellpadding='0' cellspacing='0'> <tr> <td> <a href='http://www.twitter.com/'> <img src='https://www.iconsdb.com/icons/preview/white/twitter-xxl.png' alt='Twitter' width='38' height='38' style='display: block;' border='0' /> </a> </td> <td style='font-size: 0; line-height: 0;' width='20'>&nbsp;</td> <td> <a href='http://www.facebook.com/'> <img src='https://www.iconsdb.com/icons/preview/white/facebook-3-xxl.png' alt='Facebook' width='38' height='38' style='display: block;' border='0' /> </a> </td> </tr> </table> </td> </tr> </table> </td> </table> </body> </html>"
+//             .replace("{{username}}", newEmployee.DisplayName)
+//             .replace("{{link}}", "google.com"),
+//     };
+//     newEmployee
+//       .save()
+//       .then((output) => {
+//         console.log("SV");
+//         return transporter.sendMail(mailOptions, function(error, info){
+//           if(error){
+//               return console.log(error);
+//           }
+      
+//           console.log('Message sent: ' + info.response);
+//       });
+//       })
+//       .catch((error) => {
+//         reject(error);
+//       });
+// };

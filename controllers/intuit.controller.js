@@ -17,14 +17,18 @@ const Class = require("../models/class.model");
 const crypto = require("crypto");
 var util = require("../utils/util");
 var queue = require("../queue/queue");
-let oauth2_token_json = null;
-let oauthClient = null;
-const realmId = "4620816365164578440";
+const https = require('https');
+var ping = require ("net-ping");
+
+// let oauth2_token_json = null;
+// let oauthClient = null;
+// let url_val = "/callback";
 exports.index = function (req, res) {
   res.render(path.join(__dirname, "../public/index"));
 };
 
 exports.authUri = function (req, res) {
+  console.log("Authuri");
   oauthClient = new OAuthClient({
     clientId: intuit_config.clientId,
     clientSecret: intuit_config.clientSecret,
@@ -39,427 +43,168 @@ exports.authUri = function (req, res) {
   res.send(authUri);
 };
 
-exports.callback = function (req, res) {
-  console.log("CALLBACK");
-  oauthClient
-    .createToken(req.url)
-    .then(function (authResponse) {
-      oauth2_token_json = JSON.stringify(authResponse.getToken(), null, 2);
+exports.callback = function (req,res) {
+  // Instance of client
+  console.log("RE");
+  console.log(req);
+  console.log("RE");
+  console.log(req.url);
+  
+  // https.get('https://3614-110-145-213-10.ngrok.io/intuit/callback', (resp) => {
+  //   let data = '';
+  //   resp.on('data', (chunk) => {
+  //     data += chunk;
+  //   });
+  //   resp.on('end', () => {
+  //     console.log(JSON.parse(data).explanation);
+  //   });
+  
+  // }).on("error", (err) => {
+  //   console.log("Error: " + err.message);
+  // });  
+  // console.log(util.isValidPayload(signature,"{}"));
+//   var session = ping.createSession ();
 
-      const intuitTokens = JSON.parse(oauth2_token_json);
+// session.pingHost ("127.0.0.1", function (error, target) {
+//     if (error)
+//         console.log (target + ": " + error.toString ());
+//     else
+//         console.log (target + ": Alive");
+// });
+var net = require('net');
+var hosts = [['127.0.0.1',9000]];
+hosts.forEach(function(item) {
+    var sock = new net.Socket();
+    sock.setTimeout(2500);
+    sock.on('connect', function() {
+        console.log(item[0]+':'+item[1]+' is up.');
+        sock.destroy();
+    }).on('error', function(e) {
+        console.log(item[0]+':'+item[1]+' is down: ' + e.message);
+    }).on('timeout', function(e) {
+        console.log(item[0]+':'+item[1]+' is down: timeout');
+    }).connect(item[1], item[0]);
+});
+const oauthClient = new OAuthClient({
+  clientId: intuit_config.clientId,
+  clientSecret: intuit_config.clientSecret,
+  environment: intuit_config.environment,
+  redirectUri: 'https://5271-110-145-213-10.ngrok.io/intuit/callback',
+  logging: true,
+});
 
-      var qbo = new QuickBooks(
-        intuit_config.clientId,
-        intuit_config.clientSecret,
-        intuitTokens.access_token,
-        false, // no token secret for oAuth 2.0
-        intuitTokens.realmId,
-        intuit_config.environment == "sandbox" ? true : false, // use the sandbox?
-        true, // enable debugging?
-        null, // set minorversion, or null for the latest version
-        "2.0", //oAuth version
-        intuitTokens.refresh_token
-      );
+// AuthorizationUri
+const authUri = oauthClient.authorizeUri({
+  scope: [OAuthClient.scopes.Accounting, OAuthClient.scopes.OpenId],
+  state: 'testState',
+}); // can be an array of multiple scopes ex : {scope:[OAuthClient.scopes.Accounting,OAuthClient.scopes.OpenId]}
 
-      const qboPromises = [];
+// Redirect the authUri
+res.redirect(authUri);
+// console.log(authUri);
 
-      const qboEmployeePromise = new Promise((qboResolve, qboReject) => {
-        qbo.findEmployees({ fetchAll: true }, function (error, result) {
-          const employeePromises = [];
+const parseRedirect = req.url;
 
-          if (result && result.QueryResponse && result.QueryResponse.Employee) {
-            result.QueryResponse.Employee.forEach((employee) => {
-              if (
-                employee.PrimaryEmailAddr &&
-                employee.PrimaryEmailAddr.Address
-              ) {
-                const employeePromise = new Promise((resolve, reject) => {
-                  Employee.findOne({ email: employee.PrimaryEmailAddr.Address })
-                    .then((result) => {
-                      if (result) {
-                        resolve(result);
-                      } else {
-                        var password = generator.generate({
-                          length: 10,
-                          numbers: true,
-                          symbols: true,
-                        });
+// Exchange the auth code retrieved from the **req.url** on the redirectUri
+oauthClient
+  .createToken(parseRedirect)
+  .then(function (authResponse) {
+    console.log('The Token is  ' + JSON.stringify(authResponse.getJson()));
+  })
+  .catch(function (e) {
+    console.error('The error message is :' + e.originalMessage);
+    console.error(e.intuit_tid);
+  });
+  // console.log("REQ");
+  // // console.log(req);
+  // oauthClient = new OAuthClient({
+  //   clientId: intuit_config.clientId,
+  //   clientSecret: intuit_config.clientSecret,
+  //   environment: intuit_config.environment,
+  //   redirectUri: 'https://a12a-110-145-213-10.ngrok.io/intuit/callback',
+  // });
+  // // console.log(intuit_config.redirectUri);
+  // // const authUri = oauthClient.authorizeUri({
+  // //   scope: [OAuthClient.scopes.Accounting, OAuthClient.scopes.OpenId],
+  // //   state: "testState",
+  // // });
+  
+  // // res.send(authUri);
+  // // let oac = new OAuthClient({
+  // //   clientId : 'ABZRADfUaKKkHodapUH4FJkda1KN2hI1gWbisp0pOXPtG1NxsK',
+  // //   clientSecret : 'QzyRt99zuLUL3CtK3OnHMAHpJUPW1hsPwk7jVeIF',
+  // //   environment : 'sanbox',
+  // //   redirectUri : 'https://3955-110-145-213-10.ngrok.io/intuit/callback',
+  // // });
+  // console.log("CALLBACK");
+  // console.log("URL");
+  // // console.log(typeof('/callback'));
+  // console.log(req._parsedUrl.path);
+  // console.log("URL end");
+  // console.log(oauthClient);
+  // oauthClient.createToken('https://a12a-110-145-213-10.ngrok.io/intuit/callback')
+  // .then(function(authResponse){
+  //   console.log("Auth");
+  //   console.log(authResponse);
+  // })
+  // .catch(function(e){
+  //   console.log(e);
+  // });
+  // res.send(oauthClient);
+  // let realmId = '1309604325';
+  // let access_token = 'eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..spXxvk3e-sWB6kqU8sGYGQ.qnCnxk74u591f1aWsXD_lLFTQXlnb4ayvM9LZCeVuHUPoqIwSpBXRiU7zmAKHUYYYUb4Y-wh6oBWX1YfgekQvAdJeOeeTLDHJLHO7s2WMlim627afvowixQ1qpFYAOcLuwfJpoJ_v70hDLVRp9V44HLrizrWbPulul-y69Dgscgn2ojC1mxvxuL5Ik9n-rVJvuMpj2VuwEQxEpa3YkSk_z4IeF2nnnCisAd6-1Yz10ZbHJw0SvjXisiyD0Xdz4EVwteBcWSLidhrtu_b2RJfh4h2q3wxvJBJdgGtu4fRZxXfzz-rxXDp9cE2KDEfxZSOysTe0TRsad3IqzxsqvOkVE6IE4CvdoYFrhQxpq1vzw9gZFf5wmj_gY9e8_Kk1WRFWo88ydbZmt3GIlCEhq-PHkGBkyQEsisKB6En5AwZj0qVYbDQxUjGz6CathzFUoFgUUaBfV9830ZGcI3ZaLHnp_WeTEz34KaMMx_7RdZnleY4hZg9aSNniemyRHTY7oEqGks-iTl8JBpsV9UrgduDBT9D6GRSKAS_2_n466KI2jhilfIl2SAoZOBJq0d2UY9MuKWqxP-TetjrK-147Xwz41FfJgPhPMurONOXubWX08FZFvxhQ2HUnchMY31z4Jl4AiMXrqRPVoTLgx8vABAliTUYD1rE07TzA_X754maKwpUgTJ9fTVNQUdiIaFYjivBlygPtYqnIz7i3uCk50py9w4dbJIfD2_jSeC5TT3iGuyjEsl_plj6u-r6SvoJX_RXZ_dmEoTP4RE1fRdg8fPcqLgF8k7p3Xblx5q5ntSdyBSdrVfD65UWwwW1FRkY2B_ZaZ4mMqrZqrrVq9Qli4Ht2t3YKnhImEJ8peS46N3hVqo.ul9biTaFhN6q16ocOr3z8A';
+  // let refresh_token = 'AB11647652496fwPb7j5wPgjuqCVDqvoCewU0a6BeY6DYoHYE2';
+  //     var qbo = new QuickBooks(
+  //       intuit_config.clientId,
+  //       intuit_config.clientSecret,
+  //       access_token,
+  //       false, // no token secret for oAuth 2.0
+  //       realmId,
+  //       intuit_config.environment, // use the sandbox?
+  //       true, // enable debugging?
+  //       null, // set minorversion, or null for the latest version
+  //       "2.0", //oAuth version
+  //       refresh_token
+  //     );
+  //     console.log("REQ");
+  //     console.log(qbo);
+  //     console.log(typeof(qbo));
+  // res.send(qbo);
+    // });
+  // oauthClient.createToken(req._parsedUrl.path)
+  // .then(function(authResponse){
+  //   console.log("It works");
+  // })
+  // .catch(function (e) {
+  //   console.error('The error message is :' + e.originalMessage);
+  //   console.error(e);
+  // });
+  // oauthClient
+  //   .createToken(req._parsedUrl.path)
+  //   .then(function (authResponse) {
+  //     console.log("AR");
+  //     console.log(authResponse);
+  //     oauth2_token_json = JSON.stringify(authResponse.getToken(), null, 2);
 
-                        const newEmployee = new Employee(employee);
-                        newEmployee.email = employee.PrimaryEmailAddr.Address;
-                        newEmployee.password = password;
-                        newEmployee._id = employee.Id;
+  //     const intuitTokens = JSON.parse(oauth2_token_json);
 
-                        newEmployee
-                          .save()
-                          .then((result) => {
-                            return sendVerificationEMail(
-                              result,
-                              password,
-                              resolve,
-                              reject
-                            );
-                          })
-                          .catch((error) => {
-                            reject(error);
-                          });
-                      }
-                    })
-                    .catch((error) => {
-                      reject(error);
-                    });
-                });
+  //     var qbo = new QuickBooks(
+  //       intuit_config.clientId,
+  //       intuit_config.clientSecret,
+  //       intuitTokens.access_token,
+  //       false, // no token secret for oAuth 2.0
+  //       intuitTokens.realmId,
+  //       intuit_config.environment == "sandbox" ? true : false, // use the sandbox?
+  //       true, // enable debugging?
+  //       null, // set minorversion, or null for the latest version
+  //       "2.0", //oAuth version
+  //       intuitTokens.refresh_token
+  //     );
+  //     console.log("REQ");
+  //     console.log(qbo);
+  //   });
 
-                employeePromises.push(employeePromise);
-              }
-            });
-          }
-
-          Promise.all(employeePromises)
-            .then((reslt) => {
-              qboResolve(result);
-            })
-            .catch((error) => {
-              qboReject(error);
-            });
-        });
-      });
-
-      const qboCustomerPromise = new Promise((qboResolve, qboReject) => {
-        qbo.findCustomers({ fetchAll: true }, function (error, result) {
-          const customerPromises = [];
-
-          if (result && result.QueryResponse && result.QueryResponse.Customer) {
-            result.QueryResponse.Customer.forEach((customer) => {
-              const customerPromise = new Promise((resolve, reject) => {
-                Client.findOne({ DisplayName: customer.DisplayName })
-                  .then((result) => {
-                    if (result) {
-                      resolve(result);
-                    } else {
-                      const client = new Client(customer);
-                      client._id = customer.Id;
-
-                      client
-                        .save()
-                        .then((result) => {
-                          resolve(result);
-                        })
-                        .catch((error) => {
-                          reject(error);
-                        });
-                    }
-                  })
-                  .catch((error) => {
-                    reject(error);
-                  });
-              });
-
-              customerPromises.push(customerPromise);
-            });
-          }
-
-          Promise.all(customerPromises)
-            .then((reslt) => {
-              qboResolve(result);
-            })
-            .catch((error) => {
-              qboReject(error);
-            });
-        });
-      });
-
-      const qboTaskPromise = new Promise((qboResolve, qboReject) => {
-        qbo.findItems({ fetchAll: true }, function (error, result) {
-          const itemPromises = [];
-
-          if (result && result.QueryResponse && result.QueryResponse.Item) {
-            result.QueryResponse.Item.forEach((item) => {
-              const itemPromise = new Promise((resolve, reject) => {
-                Task.findOne({ Name: item.Name })
-                  .then((result) => {
-                    if (result) {
-                      resolve(result);
-                    } else {
-                      const task = new Task(item);
-                      task._id = item.Id;
-
-                      task
-                        .save()
-                        .then((result) => {
-                          resolve(result);
-                        })
-                        .catch((error) => {
-                          reject(error);
-                        });
-                    }
-                  })
-                  .catch((error) => {
-                    reject(error);
-                  });
-              });
-
-              itemPromises.push(itemPromise);
-            });
-          }
-
-          Promise.all(itemPromises)
-            .then((reslt) => {
-              qboResolve(result);
-            })
-            .catch((error) => {
-              qboReject(error);
-            });
-        });
-      });
-
-      const qboClassPromise = new Promise((qboResolve, qboReject) => {
-        qbo.findClasses({ fetchAll: true }, function (error, result) {
-          const classPromises = [];
-
-          if (result && result.QueryResponse && result.QueryResponse.Class) {
-            result.QueryResponse.Class.forEach((_class) => {
-              const classPromise = new Promise((resolve, reject) => {
-                Class.findOne({ Name: _class.Name })
-                  .then((result) => {
-                    if (result) {
-                      resolve(result);
-                    } else {
-                      const newClass = new Class(_class);
-                      newClass._id = _class.Id;
-
-                      newClass
-                        .save()
-                        .then((result) => {
-                          resolve(result);
-                        })
-                        .catch((error) => {
-                          reject(error);
-                        });
-                    }
-                  })
-                  .catch((error) => {
-                    reject(error);
-                  });
-              });
-
-              classPromises.push(classPromise);
-            });
-          }
-
-          Promise.all(classPromises)
-            .then((reslt) => {
-              qboResolve(result);
-            })
-            .catch((error) => {
-              qboReject(error);
-            });
-        });
-      });
-
-      const qboVendorPromise = new Promise((qboResolve, qboReject) => {
-        qbo.findVendors({ fetchAll: true }, function (error, result) {
-          const vendorPromises = [];
-
-          if (result && result.QueryResponse && result.QueryResponse.Vendor) {
-            result.QueryResponse.Vendor.forEach((vendor) => {
-              const vendorPromise = new Promise((resolve, reject) => {
-                Vendor.findOne({ DisplayName: vendor.DisplayName })
-                  .then((result) => {
-                    if (result) {
-                      resolve(result);
-                    } else {
-                      const newVendor = new Vendor(vendor);
-                      newVendor._id = vendor.Id;
-
-                      newVendor
-                        .save()
-                        .then((result) => {
-                          resolve(result);
-                        })
-                        .catch((error) => {
-                          reject(error);
-                        });
-                    }
-                  })
-                  .catch((error) => {
-                    reject(error);
-                  });
-              });
-
-              vendorPromises.push(vendorPromise);
-            });
-          }
-
-          Promise.all(vendorPromises)
-            .then((reslt) => {
-              qboResolve(result);
-            })
-            .catch((error) => {
-              qboReject(error);
-            });
-        });
-      });
-
-      const qboTimeActivityPromise = new Promise((qboResolve, qboReject) => {
-        qbo.findCustomers({ fetchAll: true }, function (error, result) {
-          const timeActivityPromises = [];
-
-          if (
-            result &&
-            result.QueryResponse &&
-            result.QueryResponse.TimeActivity
-          ) {
-            result.QueryResponse.TimeActivity.forEach((timeActivity) => {
-              const timeActivityPromise = new Promise((resolve, reject) => {
-                Timesheet.findOne({ Id: timeActivity.Id })
-                  .then((result) => {
-                    if (result) {
-                      resolve(result);
-                    } else {
-                      const timesheet = new Timesheet(timeActivity);
-                      timesheet._id = timeActivity.Id;
-
-                      timesheet
-                        .save()
-                        .then((result) => {
-                          resolve(result);
-                        })
-                        .catch((error) => {
-                          reject(error);
-                        });
-                    }
-                  })
-                  .catch((error) => {
-                    reject(error);
-                  });
-              });
-
-              timeActivityPromises.push(timeActivityPromise);
-            });
-          }
-
-          Promise.all(timeActivityPromises)
-            .then((reslt) => {
-              qboResolve(result);
-            })
-            .catch((error) => {
-              qboReject(error);
-            });
-        });
-      });
-
-      const qboAccountPromise = new Promise((qboResolve, qboReject) => {
-        qbo.findAccounts({ fetchAll: true }, function (error, result) {
-          const accountPromises = [];
-
-          if (result && result.QueryResponse && result.QueryResponse.Account) {
-            result.QueryResponse.Account.forEach((account) => {
-              const accountPromise = new Promise((resolve, reject) => {
-                Account.findOne({ Id: account.Id })
-                  .then((result) => {
-                    if (result) {
-                      resolve(result);
-                    } else {
-                      const newAccount = new Account(account);
-                      newAccount._id = account.Id;
-
-                      newAccount
-                        .save()
-                        .then((result) => {
-                          resolve(result);
-                        })
-                        .catch((error) => {
-                          reject(error);
-                        });
-                    }
-                  })
-                  .catch((error) => {
-                    reject(error);
-                  });
-              });
-
-              accountPromises.push(accountPromise);
-            });
-          }
-
-          Promise.all(accountPromises)
-            .then((reslt) => {
-              qboResolve(result);
-            })
-            .catch((error) => {
-              qboReject(error);
-            });
-        });
-      });
-
-      const qboPurchasePromise = new Promise((qboResolve, qboReject) => {
-        qbo.findPurchases({ fetchAll: true }, function (error, result) {
-          const purchasePromises = [];
-
-          if (result && result.QueryResponse && result.QueryResponse.Purchase) {
-            result.QueryResponse.Account.forEach((purchase) => {
-              const purchasePromise = new Promise((resolve, reject) => {
-                Expenses.findOne({ Id: purchase.Id })
-                  .then((result) => {
-                    if (result) {
-                      resolve(result);
-                    } else {
-                      const newPurchase = new Purchase(purchase);
-                      newPurchase._id = purchase.Id;
-
-                      newPurchase
-                        .save()
-                        .then((result) => {
-                          resolve(result);
-                        })
-                        .catch((error) => {
-                          reject(error);
-                        });
-                    }
-                  })
-                  .catch((error) => {
-                    reject(error);
-                  });
-              });
-
-              purchasePromises.push(purchasePromise);
-            });
-          }
-
-          Promise.all(purchasePromises)
-            .then((reslt) => {
-              qboResolve(result);
-            })
-            .catch((error) => {
-              qboReject(error);
-            });
-        });
-      });
-
-      qboPromises.push(qboEmployeePromise);
-      qboPromises.push(qboCustomerPromise);
-      qboPromises.push(qboTaskPromise);
-      qboPromises.push(qboClassPromise);
-      qboPromises.push(qboVendorPromise);
-      qboPromises.push(qboTimeActivityPromise);
-      qboPromises.push(qboAccountPromise);
-      qboPromises.push(qboPurchasePromise);
-
-      Promise.all(qboPromises)
-        .then((reslt) => {
-          console.log("Connected to QuickBooks");
-          res.status(200).send("");
-        })
-        .catch((error) => {
-          console.log("Error occured while connecting to QuickBooks");
-          res.status(500).send("");
-        });
-    })
-    .catch(function (e) {
-      res.status(500).send("");
-    });
-};
+  };
 
 sendVerificationEMail = function (employee, password, resolve, reject) {
   var username = employee.DisplayName;
@@ -605,14 +350,72 @@ exports.getOAuthClient = function () {
   return oauthClient;
 };
 
-exports.getQBOConnection = function () {
-  // if (oauth2_token_json) {
+exports.getQBOConnection = function (req,res) {
+  console.log("RE");
+  console.log(req);
+  console.log("Entered");
+  const oauthClient = new OAuthClient({
+    clientId: intuit_config.clientId,
+    clientSecret: intuit_config.clientSecret,
+    environment: intuit_config.environment,
+    redirectUri: 'https://5271-110-145-213-10.ngrok.io/intuit/callback',
+  });
+  // console.log(oauthClient);
+  // AuthorizationUri
+  const authUri = oauthClient.authorizeUri({
+    scope: [OAuthClient.scopes.Accounting, OAuthClient.scopes.OpenId],
+    state: 'testState',
+  }); // can be an array of multiple scopes ex : {scope:[OAuthClient.scopes.Accounting,OAuthClient.scopes.OpenId]}
+  // console.log(authUri);
+  // Redirect the authUri
+  // res.redirect(authUri);
+
+  // console.log(authUri);
+  // let temp = this.callback();
+  // console.log(temp);
+  const parseRedirect = authUri;
+  
+  // Exchange the auth code retrieved from the **req.url** on the redirectUri
+  oauthClient
+    .createToken(parseRedirect)
+    .then(function (authResponse) {
+      console.log('The Token is  ' + JSON.stringify(authResponse.getJson()));
+      const oauth2_token_json = JSON.stringify(authResponse.getToken(), null, 2);
+      const intuitTokens = JSON.parse(oauth2_token_json);
+    })
+    .catch(function (e) {
+      console.error('The error message is :' + e.originalMessage);
+      console.error(e.intuit_tid);
+    });
+  // console.log(oauthClient);
+  // const authUri = oauthClient.authorizeUri({
+  //   scope: [OAuthClient.scopes.Accounting, OAuthClient.scopes.OpenId],
+  //   state: "testState",
+  // });
+  // // res.send(authUri);
+  // console.log("CALLBACK");
+  // console.log("URL_VAL");
+  // console.log(url_val);
+  // oauthClient
+  //   .createToken(req.url)
+  //   .then(function (authResponse) {
+  //     console.log("Inside oath");
+  //     oauth2_token_json = JSON.stringify(authResponse.getToken(), null, 2);
+
+  //      c
+  //   });
+  // console.log(oauth2_token_json);
+  if (oauth2_token_json) {
     // const intuitTokens = JSON.parse(oauth2_token_json);
     console.log("QBOCONN");
     // const realmId = 4620816365164578440;
-    console.log(realmId);
-    let access_token = "eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..v13-bhvogjSNWRQxBJlcXQ.mTNHR2AdKhL4MjvYEKBClfzim3TvhDxnsGW2pExNrxWER_fxnKfQJk3BIjhbNFKVFhvo2lCkyQGchOOj5wGp6oqKi2I-95T_QIxsayORGmkyaxBSF_9AzOgUzvqXIph3-T6geVU6CVW64AZ78Kqaqs2jXkdUpvrz4azZrPDplSniZ6NkoFVT7wDd8hUsfibfZfai9zKtmLmX3kQldm9GeKDy4HcNaLCIyZxtLmasQnow3-jZ6UR80DMcezWo6_jIWQRW94Q_nNkXOGZFAjZUDZRoAabac3SZNZPZFJXBE08MO51fAzdzZ-YVyaflN6ZqCPKyJhbmbUHgxvH9ndtkWkDC8E_UtQEBft1I3ubzArf35VE5uxyn4z0L9YlF1cJhasGzZwJN4CDjeAa05gffmB46W1tcNH4vCivcH-Ff3vC4of-CuWRteOSGYJ2CcOsZFdH9HYsUHOTnZ_ruQF4gMYPYVsLtlwexTs00AM1-1vceWyWSQaGm4T-gQRTucrrzSV5CqdMgAooMVN3YA3FWj1KJnHxzTUkf90WgAVbjIFmDDGgsSAvhs3TwNaJuPv2qG253m2dXP2n7MZegekRJtpElRQIjRP68z6TdnZ1pQx1caabWJAB8HvkDXqtImkHxsv7vUzYSSj4Ie_hgeW1m2l8WidcK7KmOYpYwSm9keuzc6e7YkuiAZDlgEIYG-8YZFPYPcnMWBFSBGfTtMv5gVIn4sbuNh1tocvDsncVgP5bzCHUsax3HeqCs39eBh4XQgocWqsmIiWTRNlO5125kjTNaGawwmXqA3ZBd__V-7r6KYvr4CJaeyGBoS8EJkALwiG9t63vUthNCFYS29HvDyKC_-I6UOyQsWrgROjGqLIyX8wcb9SaWBhFPsoMhLBYktOx0oRyEvBbi3t7nuP2iug.Z7m9uDAvZHtsOFIpKu_FDA";
-    let refresh_token = "AB11647125661aXHZtOdaP2lHHwbs7jSZtys5KByJNOxx1Iyd2";
+    // let realmId = "4620816365164578440";
+    console.log(intuitTokens);
+    let realmId = '1309604325';
+    let access_token = intuitTokens.access_token;
+    let refresh_token = intuitTokens.refresh_token;
+    console.log(oauth2_token_json);
+    console.log("Before qbo");
     var qbo = new QuickBooks(
       intuit_config.clientId,
       intuit_config.clientSecret,
@@ -628,7 +431,10 @@ exports.getQBOConnection = function () {
     console.log(realmId);
     console.log(qbo);
     return qbo;
-  // } else {
-  //   return null;
-  // }
+  } else {
+    return null;
+  }
+};
+exports.demo = function(req,res){
+  console.log("Demo entered");
 };

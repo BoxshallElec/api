@@ -10,6 +10,8 @@ const expensesRoute = require("./routes/expenses.route");
 const intuitRoute = require("./routes/intuit.route");
 const uploadRoute = require("./routes/upload.route");
 const listRoute = require("./routes/list.route");
+const userRoute = require("./routes/user.route");
+// const demoRoute = require("./routes/demo.route");
 
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -95,6 +97,7 @@ app.get("/", (req, res) => {
   res.send("Bring it on! Verd API is running.");
 });
 
+// app.use("/demo",demoRoute);
 app.use("/employee", employeeRoute);
 app.use("/timesheet", timesheetRoute);
 app.use("/task", taskRoute);
@@ -105,7 +108,7 @@ app.use("/expenses", expensesRoute);
 app.use("/intuit", intuitRoute);
 app.use("/upload", uploadRoute);
 app.use("/list", listRoute);
-
+app.use("/user", userRoute);
 const port = process.env.PORT || 9000;
 
 app.listen(port, () => {

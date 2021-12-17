@@ -68,21 +68,21 @@ function getVendorObj(data) {
   }
 }
 
-exports.list = function (req, res) {
-  Vendor.find({ Active: true })
-    .then(vendors => {
-      return res
-        .status(200)
-        .json({
-          success: true,
-          data: vendors,
-          message: "Vendors fetched successfully"
-        });
-    })
-    .catch(error => {
-      return res.status(500).json({ success: false, message: error.message });
-    });
-};
+// exports.list = function (req, res) {
+//   Vendor.find({ Active: true })
+//     .then(vendors => {
+//       return res
+//         .status(200)
+//         .json({
+//           success: true,
+//           data: vendors,
+//           message: "Vendors fetched successfully"
+//         });
+//     })
+//     .catch(error => {
+//       return res.status(500).json({ success: false, message: error.message });
+//     });
+// };
 
 exports.update = function (req, res) {
   const qbo = Intuit.getQBOConnection();
@@ -156,4 +156,39 @@ exports.delete = function (req, res) {
       message: "No quickbook connection found"
     });
   }
+};
+exports.list = function (req, res) {
+  const qbo = Intuit.getQBOConnection();
+  qbo.findVendors( function (error, result) {
+    console.log("Trying to retrieve vendors");
+    if (error) {
+      console.log(error);
+      return res.status(500).json({
+        success: false,
+        message: error,
+      });
+    }
+    else{
+      console.log(result);
+      return res.status(200).json({
+
+        success: true,
+        message: "Employee list fetched successfully",
+        data: result,
+      });
+    }
+  });
+  // Vendor.find({ Active: true })
+  //   .then(vendors => {
+  //     return res
+  //       .status(200)
+  //       .json({
+  //         success: true,
+  //         data: vendors,
+  //         message: "Vendors fetched successfully"
+  //       });
+  //   })
+  //   .catch(error => {
+  //     return res.status(500).json({ success: false, message: error.message });
+  //   });
 };
