@@ -19,8 +19,8 @@ var util = require("../utils/util");
 var queue = require("../queue/queue");
 const https = require('https');
 var ping = require ("net-ping");
-
-// let oauth2_token_json = null;
+let authresponse_global = null;
+let oauth2_token_json = null;
 // let oauthClient = null;
 // let url_val = "/callback";
 exports.index = function (req, res) {
@@ -43,13 +43,33 @@ exports.authUri = function (req, res) {
   res.send(authUri);
 };
 
+var options = {
+  host: 'www.appcenter.intuit.com',
+  path: '/app/connect/oauth2?client_id=ABVF7OWjyJxZJAuJZxjXsbM7UksSSylSvyDVOC746g0UScETos&redirect_uri=https%3A%2F%2Fcc1f-59-102-52-119.ngrok.io%2Fintuit%2Fcallback&response_type=code&scope=com.intuit.quickbooks.accounting%20openid&state=testState'
+};
+callback_value = function(response) {
+  var str = '';
+
+  //another chunk of data has been received, so append it to `str`
+  response.on('data', function (chunk) {
+    str += chunk;
+  });
+
+  //the whole response has been received, so we just print it out here
+  response.on('end', function () {
+    console.log(str);
+  });
+}
 exports.callback = function (req,res) {
   // Instance of client
-  console.log("RE");
-  console.log(req);
-  console.log("RE");
-  console.log(req.url);
-  
+  // console.log("RE");
+  // console.log(req);
+  // console.log("RE");
+  // console.log(req.url);
+  let demo = https.request(options, callback_value).end();
+  console.log("DEMOOO:");
+  console.log(demo);
+  // https://appcenter.intuit.com/app/connect/oauth2?client_id=ABVF7OWjyJxZJAuJZxjXsbM7UksSSylSvyDVOC746g0UScETos&redirect_uri=https%3A%2F%2Fcc1f-59-102-52-119.ngrok.io%2Fintuit%2Fcallback&response_type=code&scope=com.intuit.quickbooks.accounting%20openid&state=testState
   // https.get('https://3614-110-145-213-10.ngrok.io/intuit/callback', (resp) => {
   //   let data = '';
   //   resp.on('data', (chunk) => {
@@ -89,7 +109,7 @@ const oauthClient = new OAuthClient({
   clientId: intuit_config.clientId,
   clientSecret: intuit_config.clientSecret,
   environment: intuit_config.environment,
-  redirectUri: 'https://5271-110-145-213-10.ngrok.io/intuit/callback',
+  redirectUri: 'https://cc1f-59-102-52-119.ngrok.io/intuit/callback',
   logging: true,
 });
 
@@ -110,6 +130,7 @@ oauthClient
   .createToken(parseRedirect)
   .then(function (authResponse) {
     console.log('The Token is  ' + JSON.stringify(authResponse.getJson()));
+    authresponse_global = authResponse;
   })
   .catch(function (e) {
     console.error('The error message is :' + e.originalMessage);
@@ -358,35 +379,35 @@ exports.getQBOConnection = function (req,res) {
     clientId: intuit_config.clientId,
     clientSecret: intuit_config.clientSecret,
     environment: intuit_config.environment,
-    redirectUri: 'https://5271-110-145-213-10.ngrok.io/intuit/callback',
+    redirectUri: 'https://cc1f-59-102-52-119.ngrok.io/intuit/callback',
   });
   // console.log(oauthClient);
   // AuthorizationUri
-  const authUri = oauthClient.authorizeUri({
-    scope: [OAuthClient.scopes.Accounting, OAuthClient.scopes.OpenId],
-    state: 'testState',
-  }); // can be an array of multiple scopes ex : {scope:[OAuthClient.scopes.Accounting,OAuthClient.scopes.OpenId]}
-  // console.log(authUri);
-  // Redirect the authUri
-  // res.redirect(authUri);
+  // const authUri = oauthClient.authorizeUri({
+  //   scope: [OAuthClient.scopes.Accounting, OAuthClient.scopes.OpenId],
+  //   state: 'testState',
+  // }); // can be an array of multiple scopes ex : {scope:[OAuthClient.scopes.Accounting,OAuthClient.scopes.OpenId]}
+  // // console.log(authUri);
+  // // Redirect the authUri
+  // // res.redirect(authUri);
 
-  // console.log(authUri);
-  // let temp = this.callback();
-  // console.log(temp);
-  const parseRedirect = authUri;
+  // // console.log(authUri);
+  // // let temp = this.callback();
+  // // console.log(temp);
+  // const parseRedirect = authUri;
   
-  // Exchange the auth code retrieved from the **req.url** on the redirectUri
-  oauthClient
-    .createToken(parseRedirect)
-    .then(function (authResponse) {
-      console.log('The Token is  ' + JSON.stringify(authResponse.getJson()));
-      const oauth2_token_json = JSON.stringify(authResponse.getToken(), null, 2);
-      const intuitTokens = JSON.parse(oauth2_token_json);
-    })
-    .catch(function (e) {
-      console.error('The error message is :' + e.originalMessage);
-      console.error(e.intuit_tid);
-    });
+  // // Exchange the auth code retrieved from the **req.url** on the redirectUri
+  // oauthClient
+  //   .createToken(parseRedirect)
+  //   .then(function (authResponse) {
+  //     console.log('The Token is  ' + JSON.stringify(authResponse.getJson()));
+  //     const oauth2_token_json = JSON.stringify(authResponse.getToken(), null, 2);
+  //     const intuitTokens = JSON.parse(oauth2_token_json);
+  //   })
+  //   .catch(function (e) {
+  //     console.error('The error message is :' + e.originalMessage);
+  //     console.error(e.intuit_tid);
+  //   });
   // console.log(oauthClient);
   // const authUri = oauthClient.authorizeUri({
   //   scope: [OAuthClient.scopes.Accounting, OAuthClient.scopes.OpenId],
@@ -405,16 +426,29 @@ exports.getQBOConnection = function (req,res) {
   //      c
   //   });
   // console.log(oauth2_token_json);
-  if (oauth2_token_json) {
+  oauthClient
+    .refresh()
+    .then(function (authResponse) {
+      console.log(
+        "The Refresh Token is  " + JSON.stringify(authResponse.getJson())
+      );
+      oauth2_token_json = JSON.stringify(authResponse.getJson(), null, 2);
+      res.send(oauth2_token_json);
+    })
+    .catch(function (e) {
+      console.error(e);
+    });
+  // if (oauth2_token_json) {
     // const intuitTokens = JSON.parse(oauth2_token_json);
     console.log("QBOCONN");
     // const realmId = 4620816365164578440;
     // let realmId = "4620816365164578440";
-    console.log(intuitTokens);
+    // console.log(intuitTokens);
     let realmId = '1309604325';
-    let access_token = intuitTokens.access_token;
-    let refresh_token = intuitTokens.refresh_token;
-    console.log(oauth2_token_json);
+    // let access_token = intuitTokens.access_token;
+    let access_token = "eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..GTSGIzM7ZtUyu-FuH47-zw.bx2BcXnkUALMrIgz0P_zpiQUYbs3VEPwA3l7kArpyXTKjd1VdzX3OW2lSgWgtiyFXevMYisR9-CU8-gFFwZRhQg8aOogGdUk2vl4jXyokwVPtgugWUFmn0msCpOz4ZD_oa-NHdjQypP9_N68INECaF04H3KxHPZOTAhP6GpKv2_cpDpSLZ9s9zyQKkpw2I6P-8UwWAxBaPBXKYi31l9wQY5MBklDX5mfd-WalceE6ZssgcBnerfImPp83HIVd6ND1N-J1AmBWfJ6OMoFu5-ahsqTMokJZZLpZrGmw3rhL7RTcc8PnpBOWxh2MXWdl1ERkgwZG0ApX4ouTYC0sbepGxNeSmReNmPaZ9eADGXihz-rYJtuq7C3ZnfYwkLRirQJ9j6bSTMt7EhIyEjpgJ-gnsxp_o9D5gbuOFh7xZtFhCTAm-s8C9n3YkagjXNvXqtfZn6Ta8a5FH6wDlAd2BHefEg729rpAvOWGwBfs9wLcR52rZUwdC6J3_pXATo-3rOtWLX55GF7JKmI7qoj8Cxw9SuK301lBx1yPQWPCygzBZqtq4KvqnG-Z7o6fWxAtjIMWXebw0FZ02q8Xy2j9cwBb_1cTRHojx_7KQafyhVbkrcAdZWaMb6RVUBQ-vCoxm_OYTGEbVCZz894_qLg16WdagEtCWDFleNc0R4V8cCscYzHq6auAjx27I8rYx1csNjSQJrIXBfl1ZBv09ok8HI6mRLgsuuggLhj6nUaDP63_jrtcsRdYoaPYQ6-IAHQ0BH7HtOBJzSLYc0fo9vQps_Bppqg7YwvQZYo3sN9vFp8O9EmPY5sUEpoo74waxHLdxgybumx1avFFuBC5BSQivN0OKyGHdbFcmO7LvfrvlUcFWoHUf5rwDrBtGwFF6r86c0m.xGtzGKkwzqpzDj1JHe8mfQ";
+    let refresh_token = "AB11648663953mF1dcOwcq6VMEYCGTcg1iVYm1Ann2kUv8nu2L";
+    // console.log(oauth2_token_json);
     console.log("Before qbo");
     var qbo = new QuickBooks(
       intuit_config.clientId,
@@ -431,9 +465,9 @@ exports.getQBOConnection = function (req,res) {
     console.log(realmId);
     console.log(qbo);
     return qbo;
-  } else {
-    return null;
-  }
+  // } else {
+  //   return null;
+  // }
 };
 exports.demo = function(req,res){
   console.log("Demo entered");

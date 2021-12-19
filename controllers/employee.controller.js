@@ -636,6 +636,29 @@ exports.getAllEmployeesQBO = function(req, res){
     }
   });
 };
+exports.getTaxQBO = function(req, res){
+  console.log("GetTax");
+  const qbo = Intuit.getQBOConnection();
+  qbo.findAccounts( function (error, result) {
+    console.log("Trying to retrieve");
+    if (error) {
+      console.log(error);
+      return res.status(500).json({
+        success: false,
+        message: error,
+      });
+    }
+    else{
+      console.log(result);
+      return res.status(200).json({
+
+        success: true,
+        message: "Employee list fetched successfully",
+        data: result,
+      });
+    }
+  });
+};
 
 // exports.linkEmployee = function(req, res){
 //   const qbo = Intuit.getQBOConnection();
