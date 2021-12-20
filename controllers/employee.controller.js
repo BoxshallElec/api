@@ -1,4 +1,5 @@
 const Employee = require("../models/employee.model");
+const linkEmp = require("../models/linkemployee.model");
 const nodemailer = require("nodemailer");
 const Client = require("../models/client.model");
 const Task = require("../models/task.model");
@@ -659,8 +660,57 @@ exports.getTaxQBO = function(req, res){
     }
   });
 };
+exports.linkEmployee = function(req,res){
+  console.log(req.body.linkedEmployeeId);
+  console.log(req.body.hourlyRate);
+  const linkEmployees = new linkEmp(req.body);
+          linkEmployees.name = req.body.linkEmployeeId;
+          linkEmployees.mongoid = req.body.linkUserId;
+          linkEmployees.rate = req.body.hourlyRate;
+          linkEmployees.tax = req.body.taxRequired;
+          linkEmployees.taxType= req.body.taxType;
+          linkEmployees.superRequired = req.body.superRequired;
+          linkEmployees.superPercentage=req.body.superPercentage,
+          linkEmployees.superBase= req.body.superBase; 
+          linkEmployees.superPayable = req.body.superPayable;
+          linkEmployees
+            .save()
+            .then((output) => {
+              // return null;
+              return res.status(200).json({
 
-// exports.linkEmployee = function(req, res){
+                success: true,
+                message: "Employee list fetched successfully",
+                data: output,
+            });
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+};
+
+exports.listDetails = function (req, res) {
+
+const from = req.body.from || 0;
+    const size = req.body.size || 10;
+    let q = {};
+    
+    linkEmp.find(q)
+        .skip(from)
+        .limit(size)
+        .sort({ _id: -1 })
+        .then(emp => {
+            return res.status(200).json({
+                success: true,
+                message: "employee items list fetched successfully",
+                data: emp
+            });
+        })
+        .catch(error => {
+            return res.status(500).json({ success: false, message: error.message });
+        });
+      }
+//inkEmployee = function(req, res){
 //   const qbo = Intuit.getQBOConnection();
 //   qbo.createEmployee(qboEmployee, function (error, result) {
 //     console.log("Trying to create");

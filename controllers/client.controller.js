@@ -191,3 +191,25 @@ exports.listAll = function(req, res) {
       return res.status(500).json({ success: false, message: error.message });
     });
 };
+exports.listQBO = function(req, res){
+  const qbo = Intuit.getQBOConnection();
+  qbo.findCustomers( function (error, result) {
+    console.log("Trying to retrieve");
+    if (error) {
+      console.log(error);
+      return res.status(500).json({
+        success: false,
+        message: error,
+      });
+    }
+    else{
+      console.log(result);
+      return res.status(200).json({
+
+        success: true,
+        message: "Customer list fetched successfully",
+        data: result,
+      });
+    }
+  });
+};
