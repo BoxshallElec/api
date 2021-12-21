@@ -18,5 +18,6 @@ router.post("/getApprover", employee_controller.getApprover);
 router.post("/getAllEmployeesQBO",employee_controller.getAllEmployeesQBO);
 router.post("/linkEmployee",employee_controller.linkEmployee);
 router.post("/getTaxQBO",employee_controller.getTaxQBO);
+router.post("/getSuperQBO",employee_controller.getSuperQBO);
 router.post("/listDetails",employee_controller.listDetails);
 module.exports = router;

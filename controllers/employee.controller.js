@@ -591,11 +591,11 @@ exports.getApprover = function (req, res) {
   EmployeeExtended.find({ "employeeRef": employeeId})
     .limit(size)
     .then((employee) => {
-      console.log("EmployeeUser");
-      console.log(employee);
+      // console.log("EmployeeUser");
+      // console.log(employee);
       EmployeeExtended.countDocuments({ "employeeRef": employeeId})
         .then((count) => {
-          console.log("Inside extend");
+          // console.log("Inside extend");
           return res.status(200).json({
 
             success: true,
@@ -620,14 +620,14 @@ exports.getAllEmployeesQBO = function(req, res){
   qbo.findEmployees( function (error, result) {
     console.log("Trying to retrieve");
     if (error) {
-      console.log(error);
+      // console.log(error);
       return res.status(500).json({
         success: false,
         message: error,
       });
     }
     else{
-      console.log(result);
+      // console.log(result);
       return res.status(200).json({
 
         success: true,
@@ -639,6 +639,30 @@ exports.getAllEmployeesQBO = function(req, res){
 };
 exports.getTaxQBO = function(req, res){
   console.log("GetTax");
+  const qbo = Intuit.getQBOConnection();
+  qbo.findTaxCodes( function (error, result) {
+    // console.log("Trying to retrieve");
+    if (error) {
+      // console.log(error);
+      return res.status(500).json({
+        success: false,
+        message: error,
+      });
+    }
+    else{
+      // console.log(result);
+      return res.status(200).json({
+
+        success: true,
+        message: "Tax list fetched successfully",
+        data: result,
+      });
+    }
+  });
+};
+exports.getSuperQBO = function(req, res){
+  console.log("GetSuper");
+  console.log(result.length);
   const qbo = Intuit.getQBOConnection();
   qbo.findAccounts( function (error, result) {
     console.log("Trying to retrieve");
@@ -654,15 +678,15 @@ exports.getTaxQBO = function(req, res){
       return res.status(200).json({
 
         success: true,
-        message: "Employee list fetched successfully",
+        message: "Super list fetched successfully",
         data: result,
       });
     }
   });
 };
 exports.linkEmployee = function(req,res){
-  console.log(req.body.linkedEmployeeId);
-  console.log(req.body.hourlyRate);
+  // console.log(req.body.linkedEmployeeId);
+  // console.log(req.body.hourlyRate);
   const linkEmployees = new linkEmp(req.body);
           linkEmployees.name = req.body.linkEmployeeId;
           linkEmployees.mongoid = req.body.linkUserId;
@@ -692,7 +716,7 @@ exports.linkEmployee = function(req,res){
 exports.listDetails = function (req, res) {
 
 const from = req.body.from || 0;
-    const size = req.body.size || 10;
+    const size = req.body.size || 1000;
     let q = {};
     
     linkEmp.find(q)

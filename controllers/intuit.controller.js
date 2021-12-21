@@ -426,18 +426,18 @@ exports.getQBOConnection = function (req,res) {
   //      c
   //   });
   // console.log(oauth2_token_json);
-  oauthClient
-    .refresh()
-    .then(function (authResponse) {
-      console.log(
-        "The Refresh Token is  " + JSON.stringify(authResponse.getJson())
-      );
-      oauth2_token_json = JSON.stringify(authResponse.getJson(), null, 2);
-      res.send(oauth2_token_json);
-    })
-    .catch(function (e) {
-      console.error(e);
-    });
+  // oauthClient
+  //   .refresh()
+  //   .then(function (authResponse) {
+  //     console.log(
+  //       "The Refresh Token is  " + JSON.stringify(authResponse.getJson())
+  //     );
+  //     oauth2_token_json = JSON.stringify(authResponse.getJson(), null, 2);
+  //     res.send(oauth2_token_json);
+  //   })
+  //   .catch(function (e) {
+  //     console.error(e);
+  //   });
   // if (oauth2_token_json) {
     // const intuitTokens = JSON.parse(oauth2_token_json);
     console.log("QBOCONN");
@@ -446,7 +446,7 @@ exports.getQBOConnection = function (req,res) {
     // console.log(intuitTokens);
     let realmId = '1309604325';
     // let access_token = intuitTokens.access_token;
-    let access_token = "eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..T7pvxye3XMDhm9q_CpIvlA.7knA0okxazlldL6tInJC-5RLk3uMSDzEOHr48KR1P9zLMrPZvza7iOVu0zCBqtstdDu3VbXZbjkeUZnIv7nEdjUTZcdv87yfx2CjZ1Q9tJJwp1W2f6cjagGMlRfXDQSFIo_s082W670gP36dM4PXi0Opbe0STxTbbHJj7LssWBk5USeU7gabZNfn6uvE0mRAbnuJLmoWs5mjoodegF2Or8yim1LQOxUrbRY2VdICcXLSd5trNwO1l5XZOytDJN49bdhUpEfaoAyFG20-4uLOhqXbrcmdypdyr1kDnAneYZhUrVbBADyYg5susV4jMb37GevRBhRAy3-pjpGwxq1S6noSEJdKp8EXO9n4B2nt2zX0j0icJS62Hj15b4b1NUtVvznn_pV1OAlnhfgN_GSeA2z-h0KbXuKhDjCk5579VIs5BTusOL3rqeB_C_TvgAP5tIDfomCu1ho8ARNk75YJm-g8VlFtQQV7nZIn-_emmNqnvlHCalMxOZWUJePR2g1wjb_1jouLjU1gGUJGzC8H3OZ9Pfb0e4HKuFOhwBjYFeNcCxLcCrXN7C6Cka-dA2CPYhRwtd_BXLUG8vWVBR4OHF7g2KOx7YlRTUviVbrvW6SgBSVBNWVZu3XL7RgRXlCUCACEQ43iafbf_avjqFYjf5-NaVRBIWC1yvbfDYeh1vKTrsaioFFkpDvJERoQ4KwE788356NulNlhWc6ZKxXnAWVmjQvcX59tcgk99oFsOGpiWwIrXHCbj1bM47Qe_O1E9VcBj62avdthJV99BxQbre9Aa6dkRQTcdXxzuCz4CO8LFKBkl6sBziZznZX8IGNhAe0Mvdc22ssP918Dm0kICMyVZeiC3_EzCRDHt66Q7VCvSXWi5hS6gjv7TxdSJnb3.bml8AJ_29-e9cXWL6fF_4A";
+    let access_token = "eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..pUsuUhTZAHs4tDjN9rx6og.ufu2WgyEttY1lZii0OLHaXVYJnzmePkzKwu2Pp7jWTT4QtivuqqhpHsZr2-IG0Nf0q_G0cPvK4SpThaGaJJaSRrCeVmyGmSgt48tOKCz0BeA_2VNBTKUqzZY8DHfB-QyuGvp9XA7huE_muE9QRWZYnklPtUlpNeGn85pg0u_30c-MNUiP85MJuEE5nHsbF7bCkl-feJQJb8TPkyvYwrxPFq8K7xZeLNZ31P-5y3Vjsf8MQ5dspgBYlpspBRDPRpE4F5T_ZdaySR5AwI0dR-GpooYZsJZzFXeyRjL89XdTep73rDujByZjudoPAnIG4UK_5rTwJtm9QCNYSRcxAZBbPvnkDlGhRydzzDr3c45G9NHi-vpxkS8wEadC9GI-z_VX9zFahuGztiOA7Om3SOLkjPNXpZ2W2xrdGwIQtXTMsN1WZbZqBY_Ii1fHEeagZ_hlsiqPzNuuJcUFYwzxU7LODTq51FnLa-43qTxyRjiEfo-HSB0UdNLXZsdmt_qzZJst11QuerhvHAKmDIfE6HDYK-Z_agLtdjvTkrsxrgbHLpCJEcmcCNeXnYWx9f8OojY0tTI0I7FaXSirzWY-ZxPAt0e2kkAHp2M4EouLqIQyGbRUotm_DTJHh3ntqHvsgpalvtQifLXuB2nBndFNKORszegKFZ0WGhuA2kwbQ_HgVLsBivr3F0uO06wiwqYfXZr0Wmqvk-5qiVhOVSrhHJxjZ1qm0MVG673fb8PJDBVt6V0GhQ4bi8g38Xu-B-7jNh2wkBc9hcexur5YvOuwrmF0oFruEC2hv4nF5OrtHfo18p0bsMSa86nTnzcwaRQa2F1-EaDi1zSJi13f3_mL6p6qsWb8JXR8y2jVTv6jeVamdc.efMO7YJfE3Zt2I3PzXWY-Q";
     let refresh_token = "AB11648663953mF1dcOwcq6VMEYCGTcg1iVYm1Ann2kUv8nu2L";
     // console.log(oauth2_token_json);
     console.log("Before qbo");

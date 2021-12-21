@@ -156,3 +156,26 @@ exports.delete = function (req, res) {
     });
   }
 };
+exports.listQBO = function(req, res){
+  const qbo = Intuit.getQBOConnection();
+  qbo.findClasses( function (error, result) {
+    console.log("Trying to retrieve");
+    if (error) {
+      console.log(error);
+      return res.status(500).json({
+        success: false,
+        message: error,
+      });
+    }
+    else{
+      console.log(result);
+      return res.status(200).json({
+
+        success: true,
+        message: "Services list fetched successfully",
+        data: result,
+      });
+    }
+  });
+};
+
