@@ -62,26 +62,56 @@ exports.add = function (req, res) {
 };
 
 exports.list = function (req, res) {
-  let query = {}
-  switch (req.body.status) {
-    case "not-active":
-      query.Active = false;
-      break;
-    case "active":
-      query.Active = true;
-      break;
-  }
-  Class.find(query)
-    .then(result => {
-      return res.status(200).json({
-        success: true,
-        message: "Classes list fetched successfully",
-        data: result
-      });
-    })
-    .catch(error => {
-      return res.status(500).json({ success: false, message: error.message });
+  // let query = {}
+  // switch (req.body.status) {
+  //   case "not-active":
+  //     query.Active = false;
+  //     break;
+  //   case "active":
+  //     query.Active = true;
+  //     break;
+  // }
+  // Class.find(query)
+  //   .then(result => {
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: "Classes list fetched successfully",
+  //       data: result
+  //     });
+  //   })
+  //   .catch(error => {
+  //     return res.status(500).json({ success: false, message: error.message });
+  //   });
+  const qbo = Intuit.getQBOConnection();
+
+  // delete req.body._id;
+
+  if (qbo) {
+    qbo.findClasses( function (error, result) {
+      console.log("Trying to retrieve");
+      if (error) {
+        // console.log(error);
+        return res.status(500).json({
+          success: false,
+          message: error,
+        });
+      }
+      else{
+        // console.log(result);
+        return res.status(200).json({
+  
+          success: true,
+          message: "Classes list fetched successfully",
+          data: result,
+        });
+      }
     });
+  } else {
+    return res.status(500).json({
+      success: false,
+      message: "No quickbook connection found"
+    });
+  }
 };
 
 exports.update = function (req, res) {

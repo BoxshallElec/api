@@ -141,40 +141,60 @@ exports.listSubClient = function(req, res) {
 
 exports.list = function(req, res) {
   const from = req.body.from || 0;
-  const size = req.body.size || 10;
+  const size = req.body.size || 1000;
 
-  Client.find({})
-    .skip(from)
-    .limit(size)
-    .then(data => {
-      if (from == 0) {
-          // console.log("LOLLZZZ");
-          // console.log(Client.countDocuments({}));
-        Client.countDocuments({})
-          .then(totalCount => {
-            return res.status(200).json({
-              success: true,
-              message: "Client list fetched successfully",
-              data: data,
-              totalCount: totalCount
-            });
-          })
-          .catch(error => {
-            return res
-              .status(500)
-              .json({ success: false, message: error.message });
-          });
-      } else {
-        return res.status(200).json({
-          success: true,
-          message: "Client list fetched successfully",
-          data: data
-        });
-      }
-    })
-    .catch(error => {
-      return res.status(500).json({ success: false, message: error.message });
-    });
+  // Client.find({})
+  //   .skip(from)
+  //   .limit(size)
+  //   .then(data => {
+  //     if (from == 0) {
+  //         // console.log("LOLLZZZ");
+  //         // console.log(Client.countDocuments({}));
+  //       Client.countDocuments({})
+  //         .then(totalCount => {
+  //           return res.status(200).json({
+  //             success: true,
+  //             message: "Client list fetched successfully",
+  //             data: data,
+  //             totalCount: totalCount
+  //           });
+  //         })
+  //         .catch(error => {
+  //           return res
+  //             .status(500)
+  //             .json({ success: false, message: error.message });
+  //         });
+  //     } else {
+  //       return res.status(200).json({
+  //         success: true,
+  //         message: "Client list fetched successfully",
+  //         data: data
+  //       });
+  //     }
+  //   })
+  //   .catch(error => {
+  //     return res.status(500).json({ success: false, message: error.message });
+  //   });
+  const qbo = Intuit.getQBOConnection();
+  qbo.findCustomers( function (error, result) {
+    console.log("Trying to retrieve");
+    if (error) {
+      console.log(error);
+      return res.status(500).json({
+        success: false,
+        message: error,
+      });
+    }
+    else{
+      console.log(result);
+      return res.status(200).json({
+
+        success: true,
+        message: "Customer list fetched successfully",
+        data: result,
+      });
+    }
+  });
 };
 
 exports.listAll = function(req, res) {

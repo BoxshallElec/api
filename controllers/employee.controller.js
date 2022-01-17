@@ -196,7 +196,33 @@ exports.register = function (req, res) {
       return res.status(500).json({ success: false, message: error.message });
     });
 };
+exports.sendEmail = function(req, res){
+  console.log("Remainder");
+  console.log(req);
+  let emailaddr = req.body.remainderSheet;
+  let name = req.body.name;
+  var mailOptions = {
+    from: "shwetha@boxshallelec.com",
+      to: emailaddr,
+      subject: "Boxshall Electrical TimeSheet Submission Remainder",
+      html:
+        "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'> <html xmlns='http://www.w3.org/1999/xhtml'> <head> <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /> <title>Boxshall Electrical TimeSheet Remainder</title> <meta name='viewport' content='width=device-width, initial-scale=1.0' /> <style> button { display: inline-block; border: none; padding: 1rem 2rem; margin: 0; text-decoration: none; background: #e67e22; color: #ffffff; font-family: sans-serif; font-size: 1rem; cursor: pointer; border-radius: 6px; text-align: center; transition: background 250ms ease-in-out, transform 150ms ease; -webkit-appearance: none; -moz-appearance: none; } button:hover, button:focus { background: #d35400; } button:focus { outline: 1px solid #fff; outline-offset: -4px; } button:active { transform: scale(0.99); } </style> </head> <body style='background: #ecf0f1'> <table align='center' border='0' cellpadding='20' cellspacing='20' width='600' style='border-collapse: collapse;background: #fff;border-radius: 6px'> <tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; padding-top: 24px;padding-bottom: 24px'> <b>Boxshall Electrical</b> </td> </tr> <tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 30px; line-height: 20px;padding-bottom: 24px'> <b></b> </td> </tr>" +
+        "<tr> <td style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> Email : <b>" +
+        emailaddr +
+        "</b></td></tr>" +
+        "<tr><td style='color: #9e9e9e; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> Dear {{username}} Your Timesheets are pending to be sent to the Approver. Kindly login to the Verd Portal and send drafted timesheets for approval. </td> </tr> <tr> <td align='center' style='color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;padding-bottom: 24px'> <button><a href='{{link}}' style='color:white;text-decoration: none'>Login</a></button> </td> </tr> <td bgcolor='#e67e22' style='padding: 30px 30px 30px 30px;border-bottom-left-radius: 6px;border-bottom-right-radius: 6px'> <table border='0' cellpadding='0' cellspacing='0' width='100%'> <tr> <td width='75%' style='color: #ffffff; font-family: Arial, sans-serif; font-size: 14px;'> Copyright © 2019, Boxshall Electrical. All Rights Reserved </td> <td align='right'> <table border='0' cellpadding='0' cellspacing='0'> <tr> <td> <a href='http://www.twitter.com/'> <img src='https://www.iconsdb.com/icons/preview/white/twitter-xxl.png' alt='Twitter' width='38' height='38' style='display: block;' border='0' /> </a> </td> <td style='font-size: 0; line-height: 0;' width='20'>&nbsp;</td> <td> <a href='http://www.facebook.com/'> <img src='https://www.iconsdb.com/icons/preview/white/facebook-3-xxl.png' alt='Facebook' width='38' height='38' style='display: block;' border='0' /> </a> </td> </tr> </table> </td> </tr> </table> </td> </table> </body> </html>"
+          .replace("{{username}}", name)
+          .replace("{{link}}", "google.com"),
+  };
+  return transporter.sendMail(mailOptions, function(error, info){
+    if(error){
+        return console.log(error);
+    }
 
+    console.log('Message sent: ' + info.response);
+});
+
+};
 exports.login = function (req, res) {
   Employee.findOne({ email: req.body.email })
     .then((employee) => {
@@ -734,6 +760,144 @@ const from = req.body.from || 0;
             return res.status(500).json({ success: false, message: error.message });
         });
       }
+
+exports.createQBOTime = function(req, res){
+  console.log("CreateTime");
+  console.log(req.body.datatosend[0]);
+  let demodata = {
+    "TxnDate": "2022-01-01", 
+    "EmployeeRef": {
+      "value":700,
+      // "value": req.body.datatosend[0].EmployeeRef.value,
+    }, 
+    "CustomerRef": { "name": req.body.datatosend[0].CustomerRef.value },
+    "ItemRef": { "name": req.body.datatosend[0].ItemRef.value },
+    "Hours":req.body.datatosend[0].Hours,
+    "StartTime": req.body.datatosend[0].StartTime, 
+    "NameOf": "Employee"
+  };
+  let serverdata = {
+    EmployeeRef: { value: '05' },
+    CustomerRef: { value: 'Freeman Sporting Goods' },
+    ItemRef: { value: 'Design:Design' },
+    Hours: 7,
+    Description: 'cvbn ',
+    BillableStatus: 'NotBillable',
+    StartTime: '2021-12-02T13:00:00.000Z'
+  }
+  console.log("Datasent");
+  console.log(req.body.datatosend);
+  const qbo = Intuit.getQBOConnection();
+  qbo.createTimeActivity(demodata, function(err, result) {
+    if (err) console.log(err)
+    else {
+      console.log(result);
+      return res.status(200).json({
+        success: true,
+        message: "Employee list fetched successfully",
+        data: result,
+      });
+    }
+  });
+  
+};
+exports.createQBOInvoice = function(req, res){
+  console.log("CreateInvoice");
+  console.log(req.body.datatosend[0]);
+  let demodata = {
+    "Line": [
+      {
+        "DetailType": "SalesItemLineDetail", 
+        "Amount": req.body.totalprice, 
+        "SalesItemLineDetail": {
+          "ItemRef": {
+            "name": req.body.name, 
+            "value": req.body.datatosend[0].ItemRef.value
+          }
+        }
+      }
+    ], 
+    "CustomerRef": {
+      "value": req.body.datatosend[0].CustomerRef.value
+    }
+  };
+  
+  console.log("Datasent");
+  console.log(req.body.datatosend);
+  const qbo = Intuit.getQBOConnection();
+  qbo.createInvoice(demodata, function(err, result) {
+    if (err) console.log(err)
+    else {
+      console.log(result);
+      return res.status(200).json({
+        success: true,
+        message: "Invoice fetched successfully",
+        data: result,
+      });
+    }
+  });
+  
+};
+exports.createQBOPayment = function(req, res){
+  console.log("CreatePayment");
+  console.log(req.body.datatosend[0]);
+  let demodata = {
+    "TotalAmt": req.body.totalprice, 
+    "CustomerRef": {
+      "value": req.body.id
+    }
+  }
+  
+  console.log("Datasent");
+  console.log(req.body.datatosend);
+  const qbo = Intuit.getQBOConnection();
+  qbo.createPayment(demodata, function(err, result) {
+    if (err) console.log(err)
+    else {
+      console.log(result);
+      return res.status(200).json({
+        success: true,
+        message: "Payment made  successfully",
+        data: result,
+      });
+    }
+  });
+  
+};
+exports.getlinkedEmployee = function(req,res){
+  const from = req.body.from || 0;
+  const size = req.body.size || 100;
+  let mongoid = req.body.selectedId;
+  linkEmp.findOne({ mongoid: mongoid })
+      .then(result => {
+          return res.status(200).json({
+              success: true,
+              message: "employee list fetched successfully",
+              data: result
+          });
+      })
+      .catch(error => {
+          return res.status(500).json({ success: false, message: error.message });
+      });
+};
+exports.listlnk = function(req,res){
+  const from = req.body.from || 0;
+  const size = req.body.size || 100;
+  let mongoid = req.body.selectedId;
+  linkEmp.find({})
+      .skip(from)
+      .limit(size)
+      .then(result => {
+          return res.status(200).json({
+              success: true,
+              message: "employee list fetched successfully",
+              data: result
+          });
+      })
+      .catch(error => {
+          return res.status(500).json({ success: false, message: error.message });
+      });
+};
 //inkEmployee = function(req, res){
 //   const qbo = Intuit.getQBOConnection();
 //   qbo.createEmployee(qboEmployee, function (error, result) {

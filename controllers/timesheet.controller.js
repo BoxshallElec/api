@@ -528,6 +528,10 @@ exports.listByEmployee = function (req, res) {
     const size = req.body.size || 100;
     const _id = req.body._id;
     const status = req.body.status;
+    const startDate = req.body.startDate;
+    const endDate = req.body.endDate;
+    console.log("SD");
+    console.log(new Date(startDate));
     // TimeSheetExtended.aggregate([
     //   {
     //     $match: {
@@ -560,11 +564,16 @@ exports.listByEmployee = function (req, res) {
     //   },
     //   { $limit: size },
     // ])
+    // , "StartTime": {
+    //   $gte: new Date(startDate).setHours(00, 00, 00)
+       
       TimeSheetExtended.find({ "EmployeeRef.value": _id, "status":status})
       .limit(size)
       .then((timesheets) => {
         TimeSheetExtended.countDocuments({ "EmployeeRef.value": _id, "status":status})
           .then((count) => {
+            console.log("TS");
+            console.log(timesheets);
             return res.status(200).json({
               success: true,
               message: "Timesheets list fetched successfully",
@@ -573,6 +582,7 @@ exports.listByEmployee = function (req, res) {
             });
           })
           .catch((error) => {
+            console.log("Error Ts");
             return res
               .status(400)
               .json({ success: false, message: error.message });
